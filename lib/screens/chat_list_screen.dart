@@ -4,7 +4,7 @@ import '../providers/chat_list_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
 import '../models/message_model.dart';
-import '../models/chat_model.dart';   // اضافه شد
+import '../models/chat_model.dart';   // <----- این خط اضافه شد
 import 'chat_screen.dart';
 
 class ChatListScreen extends ConsumerWidget {
@@ -148,7 +148,7 @@ class ChatListScreen extends ConsumerWidget {
                     final chatId = _generateChatId(currentUser.id, userList[i].id);
                     final existingChat = ref.read(chatListProvider).firstWhere(
                       (c) => c.id == chatId,
-                      orElse: () => null,
+                      orElse: () => null as Chat,
                     );
                     if (existingChat == null) {
                       final newChat = Chat(
