@@ -24,7 +24,20 @@ jobs:
 
       - run: flutter build apk --release
 
+      # آپلود Artifact (برای دسترسی خودت داخل Actions)
       - uses: actions/upload-artifact@v4
         with:
           name: my-telegram-app
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      # انتشار APK در بخش Releases (برای لینک مستقیم عمومی)
+      - name: Create Release and Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
+          tag_name: "v1.0.${{ github.run_number }}"
+          name: "Build #${{ github.run_number }}"
+          body: "APK ساخته شده توسط GitHub Actions"
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
