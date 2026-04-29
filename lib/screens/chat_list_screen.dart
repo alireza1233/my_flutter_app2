@@ -4,7 +4,7 @@ import '../providers/chat_list_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/user_model.dart';
 import '../models/message_model.dart';
-import '../models/chat_model.dart';   // <----- این خط اضافه شد
+import '../models/chat_model.dart';
 import 'chat_screen.dart';
 
 class ChatListScreen extends ConsumerWidget {
@@ -146,10 +146,16 @@ class ChatListScreen extends ConsumerWidget {
                   subtitle: Text(userList[i].phoneNumber),
                   onTap: () async {
                     final chatId = _generateChatId(currentUser.id, userList[i].id);
-                    final existingChat = ref.read(chatListProvider).firstWhere(
-                      (c) => c.id == chatId,
-                      orElse: () => null as Chat,
-                    );
+                    
+                    // پیدا کردن چت موجود بدون استفاده از firstWhere
+                    Chat? existingChat;
+                    for (var chat in ref.read(chatListProvider)) {
+                      if (chat.id == chatId) {
+                        existingChat = chat;
+                        break;
+                      }
+                    }
+                    
                     if (existingChat == null) {
                       final newChat = Chat(
                         id: chatId,
