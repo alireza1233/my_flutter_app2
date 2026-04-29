@@ -79,7 +79,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Expanded(
             child: messagesAsync.when(
               data: (messages) {
-                // مرتب‌سازی صعودی (قدیمی‌ترین اول)
                 final sortedMessages = List.of(messages)..sort((a,b)=>a.timestamp.compareTo(b.timestamp));
                 return ListView.builder(
                   controller: _scrollController,
@@ -143,12 +142,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onSend: (text) async {
               final current = ref.read(currentUserProvider).value;
               if (current == null || text.trim().isEmpty) return;
-              await ref.read(sendMessageProvider(
+              // اصلاح: اضافه کردن یک جفت پرانتز دور named arguments
+              await ref.read(sendMessageProvider((
                 chatId: widget.chatId,
                 receiverId: widget.otherUser.id,
                 text: text,
                 currentUser: current,
-              ).future);
+              )).future);
               _scrollController.animateTo(
                 0,
                 duration: const Duration(milliseconds: 300),
