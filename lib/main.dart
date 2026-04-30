@@ -5,12 +5,18 @@ import 'screens/chat_list_screen.dart';
 import 'utils/theme.dart';
 import 'services/storage_service.dart';
 import 'providers/auth_provider.dart';
-import 'providers/chat_provider.dart';  // <----- اضافه شد
+import 'providers/chat_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final storage = StorageService();
-  await storage.init();
+  try {
+    final storage = StorageService();
+    await storage.init();
+  } catch (e) {
+    debugPrint('❌ Storage initialization failed: $e');
+    // در صورت خطا در مقداردهی اولیه، برنامه همچنان اجرا می‌شود
+    // اما برخی قابلیت‌ها ممکن است کار نکنند
+  }
   runApp(const ProviderScope(child: MyApp()));
 }
 
