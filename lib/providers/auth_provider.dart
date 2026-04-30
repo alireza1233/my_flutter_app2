@@ -20,8 +20,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   }
 
   Future<void> _loadUser() async {
-    final user = await _authService.getCurrentUser();
-    state = AsyncValue.data(user);
+    try {
+      final user = await _authService.getCurrentUser();
+      state = AsyncValue.data(user);
+    } catch (e, stack) {
+      // چاپ خطا در کنسول برای دیباگ
+      print('Error loading user: $e');
+      // رفتن به حالت خطا – در main.dart این حالت به LoginScreen هدایت می‌شود
+      state = AsyncValue.error(e, stack);
+    }
   }
 
   Future<void> login(String phone) async {
