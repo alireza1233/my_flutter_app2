@@ -19,14 +19,21 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     _loadUser();
   }
 
+  // اصلاح شده: برگرداندن کاربر تستی بدون نیاز به دیتابیس
   Future<void> _loadUser() async {
     try {
-      final user = await _authService.getCurrentUser();
-      state = AsyncValue.data(user);
+      // ساخت کاربر تستی ساده برای تست فرانت‌اند
+      final testUser = User(
+        id: 'test_user_123',
+        phoneNumber: '09123456789',
+        name: 'کاربر تست',
+        isOnline: true,
+        lastSeen: DateTime.now(),
+      );
+      state = AsyncValue.data(testUser);
+      print('✅ کاربر تستی با موفقیت ساخته شد: ${testUser.name}');
     } catch (e, stack) {
-      // چاپ خطا در کنسول برای دیباگ
-      print('Error loading user: $e');
-      // رفتن به حالت خطا – در main.dart این حالت به LoginScreen هدایت می‌شود
+      print('❌ خطا در ساخت کاربر تستی: $e');
       state = AsyncValue.error(e, stack);
     }
   }
@@ -34,15 +41,21 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   Future<void> login(String phone) async {
     state = const AsyncValue.loading();
     try {
-      final user = await _authService.loginWithPhone(phone);
-      state = AsyncValue.data(user);
+      // برای سادگی، همان کاربر تستی برگردانده می‌شود
+      final testUser = User(
+        id: 'test_user_123',
+        phoneNumber: phone,
+        name: 'کاربر تست',
+        isOnline: true,
+        lastSeen: DateTime.now(),
+      );
+      state = AsyncValue.data(testUser);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<void> logout() async {
-    await _authService.logout();
     state = const AsyncValue.data(null);
   }
 }
