@@ -5,8 +5,7 @@ class ChatListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // دیتای ساختگی برای نمایش چند چت
-    final dummyChats = [
+    final List<Map<String, dynamic>> dummyChats = [
       {
         'name': 'علی رضایی',
         'lastMessage': 'سلام، چطوری؟',
@@ -34,7 +33,6 @@ class ChatListScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              // موقتاً کاری نمی‌کند
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('خروج موقتاً غیرفعال است')),
               );
@@ -48,11 +46,11 @@ class ChatListScreen extends StatelessWidget {
           final chat = dummyChats[index];
           return ListTile(
             leading: CircleAvatar(
-              child: Text(chat['name']![0]),
+              child: Text(chat['name'][0]),
             ),
-            title: Text(chat['name']!),
-            subtitle: Text(chat['lastMessage']!),
-            trailing: chat['unread']! > 0
+            title: Text(chat['name']),
+            subtitle: Text(chat['lastMessage']),
+            trailing: chat['unread'] > 0
                 ? Container(
                     padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
@@ -64,7 +62,7 @@ class ChatListScreen extends StatelessWidget {
                       style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   )
-                : Text(chat['time']!),
+                : Text(chat['time']),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('صفحه چت در حال توسعه است')),
