@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.my_project"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34  // تغییر به 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -20,9 +20,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.my_project"
-        // 🔥 مهم: minSdk رو از 19 به 23 تغییر دادم برای flutter_secure_storage
         minSdk = 23
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34  // تغییر به 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -30,6 +29,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            minifyEnabled false
+            shrinkResources false
         }
     }
 }
