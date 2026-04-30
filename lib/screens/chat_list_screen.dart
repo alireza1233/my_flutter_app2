@@ -1,3 +1,4 @@
+// lib/screens/chat_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/chat_list_provider.dart';
@@ -115,8 +116,11 @@ class ChatListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          final user = currentUserAsync.value;
-          if (user != null) _showNewChatDialog(context, ref, user);
+          // برای دسترسی به currentUser در FutureProvider از داده فعلی استفاده می‌کنیم
+          final userAsync = ref.read(currentUserProvider);
+          userAsync.whenData((user) {
+            if (user != null) _showNewChatDialog(context, ref, user);
+          });
         },
         child: const Icon(Icons.chat),
       ),
@@ -135,6 +139,9 @@ class ChatListScreen extends ConsumerWidget {
           builder: (ctx, snapshot) {
             if (!snapshot.hasData) return const CircularProgressIndicator();
             final userList = snapshot.data!;
+            if (userList.isEmpty) {
+              return const Center(child: Text('هیچ کاربر دیگری یافت نشد'));
+            }
             return SizedBox(
               width: double.maxFinite,
               height: 300,
@@ -146,8 +153,6 @@ class ChatListScreen extends ConsumerWidget {
                   subtitle: Text(userList[i].phoneNumber),
                   onTap: () async {
                     final chatId = _generateChatId(currentUser.id, userList[i].id);
-                    
-                    // پیدا کردن چت موجود بدون استفاده از firstWhere
                     Chat? existingChat;
                     for (var chat in ref.read(chatListProvider)) {
                       if (chat.id == chatId) {
@@ -155,7 +160,6 @@ class ChatListScreen extends ConsumerWidget {
                         break;
                       }
                     }
-                    
                     if (existingChat == null) {
                       final newChat = Chat(
                         id: chatId,
