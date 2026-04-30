@@ -3,6 +3,10 @@ name: Build Flutter APK
 on:
   workflow_dispatch:
 
+# اعطای دسترسی نوشتن برای ایجاد Release
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -24,13 +28,11 @@ jobs:
 
       - run: flutter build apk --release
 
-      # آپلود Artifact (برای دسترسی خودت داخل Actions)
       - uses: actions/upload-artifact@v4
         with:
           name: my-telegram-app
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      # انتشار APK در بخش Releases (برای لینک مستقیم عمومی)
       - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v2
         with:
