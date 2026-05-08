@@ -36,47 +36,26 @@ jobs:
           echo "ANDROID_HOME=$env:USERPROFILE\android-sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "ANDROID_SDK_ROOT=$env:USERPROFILE\android-sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Accept licenses (force)
+      - name: Accept licenses (using cmd loop)
         shell: cmd
         run: |
           set ANDROID_HOME=%USERPROFILE%\android-sdk
           set ANDROID_SDK_ROOT=%ANDROID_HOME%
-          %USERPROFILE%\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat --licenses < NUL
-        # این روش در CMD با ورودی خالی ممکن است تمام لایسنس‌ها را رد کند. راه‌حل بهتر زیر:
-
-      - name: Accept licenses (PowerShell reliable)
-        shell: pwsh
-        run: |
-          $sdkmanager = "$env:USERPROFILE\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat"
-          # اجرای فرمان و ارسال خودکار 'y' برای هر لایسنس
-          $licensesProcess = Start-Process -FilePath $sdkmanager -ArgumentList "--licenses" -NoNewWindow -PassThru -RedirectStandardInput "NUL"
-          # اما بهتر است از یک فایل موقت حاوی خطوط y استفاده کنیم
-          $yesFile = "$env:TEMP\yes.txt"
-          for ($i=0; $i -lt 20; $i++) { "y" | Out-File -FilePath $yesFile -Append -Encoding ascii }
-          Get-Content $yesFile | & $sdkmanager --licenses 2>&1
-          Remove-Item $yesFile
+          (for /l %i in (1,1,15) do @echo y) | %USERPROFILE%\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat --licenses
 
       - name: Install Platform 34 and Build-Tools 34.0.0
         shell: pwsh
         run: |
           $sdkmanager = "$env:USERPROFILE\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat"
-          # نصب با خروجی verbose
           & $sdkmanager --verbose "platforms;android-34" "build-tools;34.0.0"
           if ($LASTEXITCODE -ne 0) {
             Write-Error "sdkmanager failed with exit code $LASTEXITCODE"
             exit 1
           }
-          # بررسی وجود دایرکتوری‌ها
           $platformDir = "$env:USERPROFILE\android-sdk\platforms\android-34"
           $btDir = "$env:USERPROFILE\android-sdk\build-tools\34.0.0"
-          if (-not (Test-Path $platformDir)) {
-            Write-Error "Platform directory not created: $platformDir"
-            exit 1
-          }
-          if (-not (Test-Path $btDir)) {
-            Write-Error "Build-tools directory not created: $btDir"
-            exit 1
-          }
+          if (-not (Test-Path $platformDir)) { throw "Platform directory not created" }
+          if (-not (Test-Path $btDir)) { throw "Build-tools directory not created" }
           Write-Host "Installation successful"
 
       - name: Archive SDK folders
