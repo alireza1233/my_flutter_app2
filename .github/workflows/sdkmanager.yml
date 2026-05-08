@@ -1,4 +1,4 @@
-name: Download Android SDK 34 (Platform + Build-Tools)
+name: Download All Android SDK Platforms (30-35) + Build Tools
 
 on:
   workflow_dispatch:
@@ -36,41 +36,66 @@ jobs:
           echo "ANDROID_HOME=$env:USERPROFILE\android-sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "ANDROID_SDK_ROOT=$env:USERPROFILE\android-sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Accept licenses (PowerShell pipeline)
+      - name: Accept all licenses
         shell: pwsh
         run: |
           $sdkmanager = "$env:USERPROFILE\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat"
-          # ارسال 15 بار 'y' به صورت خودکار
-          1..15 | ForEach-Object { "y" } | & $sdkmanager --licenses 2>&1
-          if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Licenses acceptance may have failed, but continuing"
-          }
+          1..20 | ForEach-Object { "y" } | & $sdkmanager --licenses 2>&1
+          if ($LASTEXITCODE -ne 0) { Write-Warning "Licenses acceptance may have issues, continuing anyway" }
 
-      - name: Install Platform 34 and Build-Tools 34.0.0
+      - name: Install all platforms and build-tools
         shell: pwsh
         run: |
           $sdkmanager = "$env:USERPROFILE\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat"
-          & $sdkmanager --verbose "platforms;android-34" "build-tools;34.0.0"
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "sdkmanager installation failed with exit code $LASTEXITCODE"
-            exit 1
+          
+          # لیست پلتفرم‌های مورد نیاز (از 30 تا 35)
+          $platforms = @(
+            "platforms;android-30",
+            "platforms;android-31",
+            "platforms;android-32",
+            "platforms;android-33",
+            "platforms;android-34",
+            "platforms;android-35"
+          )
+          
+          # لیست build-tools مربوط به هر نسخه
+          $buildTools = @(
+            "build-tools;30.0.3",
+            "build-tools;31.0.0",
+            "build-tools;32.0.0",
+            "build-tools;33.0.0",
+            "build-tools;34.0.0",
+            "build-tools;35.0.0"
+          )
+          
+          # نصب همه
+          $allPackages = $platforms + $buildTools
+          foreach ($pkg in $allPackages) {
+            Write-Host "Installing $pkg ..."
+            & $sdkmanager --verbose $pkg
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to install $pkg"
+              exit 1
+            }
           }
-          $platformDir = "$env:USERPROFILE\android-sdk\platforms\android-34"
-          $btDir = "$env:USERPROFILE\android-sdk\build-tools\34.0.0"
-          if (-not (Test-Path $platformDir)) { throw "Platform directory not created after installation" }
-          if (-not (Test-Path $btDir)) { throw "Build-tools directory not created after installation" }
-          Write-Host "Installation successful"
+          
+          Write-Host "All platforms and build-tools installed successfully."
 
-      - name: Archive SDK folders
+      - name: Archive all SDK folders
         shell: pwsh
         run: |
-          $platformDir = "$env:USERPROFILE\android-sdk\platforms\android-34"
-          $btDir = "$env:USERPROFILE\android-sdk\build-tools\34.0.0"
-          $tempDir = "$env:TEMP\sdk-34-archive"
+          $sdkRoot = "$env:USERPROFILE\android-sdk"
+          $platformsDir = "$sdkRoot\platforms"
+          $buildToolsDir = "$sdkRoot\build-tools"
+          $tempDir = "$env:TEMP\all-sdk-archive"
           New-Item -ItemType Directory -Path $tempDir -Force
-          Copy-Item -Path $platformDir -Destination "$tempDir\platforms\android-34" -Recurse -Force
-          Copy-Item -Path $btDir -Destination "$tempDir\build-tools\34.0.0" -Recurse -Force
-          Compress-Archive -Path "$tempDir\*" -DestinationPath "android-sdk-34.zip" -CompressionLevel Optimal
+          
+          # کопиране на platforms
+          Copy-Item -Path $platformsDir -Destination "$tempDir\platforms" -Recurse -Force
+          # کопиране на build-tools
+          Copy-Item -Path $buildToolsDir -Destination "$tempDir\build-tools" -Recurse -Force
+          
+          Compress-Archive -Path "$tempDir\*" -DestinationPath "android-sdk-all-platforms.zip" -CompressionLevel Optimal
           Remove-Item $tempDir -Recurse -Force
 
       - name: Get date for tag
@@ -78,7 +103,7 @@ jobs:
         shell: pwsh
         run: |
           $date = Get-Date -Format "yyyyMMdd-HHmmss"
-          echo "TAG=sdk-34-$date" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "TAG=all-platforms-$date" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Create Release
         id: create_release
@@ -87,7 +112,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.TAG }}
-          release_name: "Android SDK 34 (Platform + Build-Tools) ${{ env.TAG }}"
+          release_name: "Android SDK All Platforms (30-35) + Build Tools ${{ env.TAG }}"
           draft: false
           prerelease: false
 
@@ -97,6 +122,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./android-sdk-34.zip
-          asset_name: android-sdk-34.zip
+          asset_path: ./android-sdk-all-platforms.zip
+          asset_name: android-sdk-all-platforms.zip
           asset_content_type: application/zip
