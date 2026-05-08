@@ -36,12 +36,15 @@ jobs:
           echo "ANDROID_HOME=$env:USERPROFILE\android-sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "ANDROID_SDK_ROOT=$env:USERPROFILE\android-sdk" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Accept licenses (using cmd loop)
-        shell: cmd
+      - name: Accept licenses (PowerShell pipeline)
+        shell: pwsh
         run: |
-          set ANDROID_HOME=%USERPROFILE%\android-sdk
-          set ANDROID_SDK_ROOT=%ANDROID_HOME%
-          (for /l %i in (1,1,15) do @echo y) | %USERPROFILE%\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat --licenses
+          $sdkmanager = "$env:USERPROFILE\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat"
+          # ارسال 15 بار 'y' به صورت خودکار
+          1..15 | ForEach-Object { "y" } | & $sdkmanager --licenses 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Licenses acceptance may have failed, but continuing"
+          }
 
       - name: Install Platform 34 and Build-Tools 34.0.0
         shell: pwsh
@@ -49,13 +52,13 @@ jobs:
           $sdkmanager = "$env:USERPROFILE\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat"
           & $sdkmanager --verbose "platforms;android-34" "build-tools;34.0.0"
           if ($LASTEXITCODE -ne 0) {
-            Write-Error "sdkmanager failed with exit code $LASTEXITCODE"
+            Write-Error "sdkmanager installation failed with exit code $LASTEXITCODE"
             exit 1
           }
           $platformDir = "$env:USERPROFILE\android-sdk\platforms\android-34"
           $btDir = "$env:USERPROFILE\android-sdk\build-tools\34.0.0"
-          if (-not (Test-Path $platformDir)) { throw "Platform directory not created" }
-          if (-not (Test-Path $btDir)) { throw "Build-tools directory not created" }
+          if (-not (Test-Path $platformDir)) { throw "Platform directory not created after installation" }
+          if (-not (Test-Path $btDir)) { throw "Build-tools directory not created after installation" }
           Write-Host "Installation successful"
 
       - name: Archive SDK folders
